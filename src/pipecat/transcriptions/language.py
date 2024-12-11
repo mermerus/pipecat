@@ -279,6 +279,9 @@ class Language(StrEnum):
     # Burmese
     MY = "my"
     MY_MM = "my-MM"
+    
+    # Both EN and ES for Deepgram
+    MULTI = "multi"
 
     # Norwegian
     NB = "nb"
