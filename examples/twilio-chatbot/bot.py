@@ -1,28 +1,32 @@
 import os
 import sys
 
-from dotenv import load_dotenv
-from loguru import logger
-
 from pipecat.audio.vad.silero import SileroVADAnalyzer
 from pipecat.frames.frames import EndFrame, LLMMessagesFrame
 from pipecat.pipeline.pipeline import Pipeline
 from pipecat.pipeline.runner import PipelineRunner
 from pipecat.pipeline.task import PipelineParams, PipelineTask
 from pipecat.processors.aggregators.openai_llm_context import OpenAILLMContext
-from pipecat.serializers.twilio import TwilioFrameSerializer
 from pipecat.services.cartesia import CartesiaTTSService
-from pipecat.services.deepgram import DeepgramSTTService
 from pipecat.services.openai import OpenAILLMService
+from pipecat.services.deepgram import DeepgramSTTService
 from pipecat.transports.network.fastapi_websocket import (
-    FastAPIWebsocketParams,
     FastAPIWebsocketTransport,
+    FastAPIWebsocketParams,
 )
+from pipecat.serializers.twilio import TwilioFrameSerializer
+
+from loguru import logger
+
+from dotenv import load_dotenv
 
 load_dotenv(override=True)
 
 logger.remove(0)
 logger.add(sys.stderr, level="DEBUG")
+
+
+from pipecat.services.deepgram import DeepgramSTTService, LiveOptions, Language
 
 
 async def run_bot(websocket_client, stream_sid):
@@ -40,8 +44,12 @@ async def run_bot(websocket_client, stream_sid):
 
     llm = OpenAILLMService(api_key=os.getenv("OPENAI_API_KEY"), model="gpt-4o")
 
-    stt = DeepgramSTTService(api_key=os.getenv("DEEPGRAM_API_KEY"))
-
+#    stt = DeepgramSTTService(api_key=os.getenv("DEEPGRAM_API_KEY"))
+    stt = DeepgramSTTService(
+        api_key=os.getenv("DEEPGRAM_API_KEY"),
+        live_options=LiveOptions(language='multi'),
+    )
+    
     tts = CartesiaTTSService(
         api_key=os.getenv("CARTESIA_API_KEY"),
         voice_id="79a125e8-cd45-4c13-8a67-188112f4dd22",  # British Lady
@@ -50,7 +58,7 @@ async def run_bot(websocket_client, stream_sid):
     messages = [
         {
             "role": "system",
-            "content": "You are a helpful LLM in an audio call. Your goal is to demonstrate your capabilities in a succinct way. Your output will be converted to audio so don't include special characters in your answers. Respond to what the user said in a creative and helpful way.",
+            "content": "You are a helpful LLM in an audio call. Your goal is to demonstrate your capabilities in a succinct way. Your output will be converted to audio so don't include special characters in your answers. Respond to what the user said in a concise and helpful way. Greet the customer by saying welcome to Zaxby's, what can I get started for you ?",
         },
     ]
 
